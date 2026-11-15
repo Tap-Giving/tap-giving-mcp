@@ -1294,6 +1294,7 @@ async function toolStartOrderIntent(ctx: Ctx, args: Record<string, unknown>): Pr
             "This email was already captured, so no second lead was created. The Tap.Giving team follows up by email, usually within one business day. " +
             "The contact was recorded through the same capture the website uses, so the follow-up is the ordinary first email, not a sales list.",
           nextStep: "Next: get_order_questions, then get_recap, then place the order at the final step, Email me my invoice and design proof (create_order). " +
+            "When you run get_recap, pass this captured email as contactEmail (and the artworkRef from submit_artwork, if a design was submitted): those arguments are what bind the recap to this flow and make it placeable. " +
             "An intent is a lead, not an order: it creates no invoice and reserves nothing.",
         },
         text:
@@ -1374,11 +1375,12 @@ async function toolStartOrderIntent(ctx: Ctx, args: Record<string, unknown>): Pr
       "the same capture the website uses, so the follow-up is the ordinary first email, not a sales list. " +
       "The capture is real in every lane: it rides the production lead machinery, and the team may follow up." + laneLine,
     nextStep: "Next: get_order_questions, then get_recap, then place the order at the final step, Email me my invoice and design proof (create_order). " +
+      "When you run get_recap, pass this captured email as contactEmail (and the artworkRef from submit_artwork, if a design was submitted): those arguments are what bind the recap to this flow and make it placeable. " +
       "An intent is a lead, not an order: it creates no invoice and reserves nothing.",
   };
   return {
     structured,
-    text: `Captured as ${intentRef}. The Tap.Giving team will follow up with ${email} by email, usually within one business day. Next: order questions, recap, then the final step, Email me my invoice and design proof.${artworkRef ? ` Your artwork (${artworkRef}) is linked to this intent.` : ""}${laneLine} The photo with this answer shows the disc in use: a phone tapping a disc on a chair back.`,
+    text: `Captured as ${intentRef}. The Tap.Giving team will follow up with ${email} by email, usually within one business day. Next: order questions, recap, then the final step, Email me my invoice and design proof. When you run the recap, pass this email as contactEmail (and the artworkRef from submit_artwork, if a design was submitted) so the recap binds to this flow.${artworkRef ? ` Your artwork (${artworkRef}) is linked to this intent.` : ""}${laneLine} The photo with this answer shows the disc in use: a phone tapping a disc on a chair back.`,
     images: productPhotoImages(),
   };
 }
@@ -1410,7 +1412,7 @@ async function toolGetOrderQuestions(_ctx: Ctx, _args: Record<string, unknown>):
       {
         order: 1, field: "contactEmail", question: "What email should the invoice, the proof, and the order emails go to?",
         input: { type: "email" },
-        note: "Collected first, through start_order_intent. The order binds to this email: it must be an address the organization owns, and the same email captured in the flow. The invoice and the design proof are emailed to this address at placement.",
+        note: "Collected first, through start_order_intent. The order binds to this email: it must be an address the organization owns, and the same email captured in the flow. The invoice and the design proof are emailed to this address at placement. Pass it to get_recap as the contactEmail argument: that is what binds the recap to the flow and makes it placeable.",
       },
       {
         order: 2, field: "organizationName", question: "What is the organization's name?",
@@ -1455,7 +1457,7 @@ async function toolGetOrderQuestions(_ctx: Ctx, _args: Record<string, unknown>):
         order: 8, field: "artworkSource", question: "What about the artwork?",
         input: { type: "enum", values: ["we_have_artwork", "team_designs_it"] },
         options: [
-          { value: "we_have_artwork", label: "We have artwork", meaning: "The design was composed in the design phase and submitted with submit_artwork; its artworkRef rides the recap and the order." },
+          { value: "we_have_artwork", label: "We have artwork", meaning: "The design was composed in the design phase and submitted with submit_artwork; pass the reference it returned to get_recap as artworkRef, and the design rides the recap and the order." },
           { value: "team_designs_it", label: "Team designs it from our name", meaning: "No file to upload and nothing to compose: the organization name (question 2, and on start_order_intent with a sourceNote asking for the design) is all the team needs. They design the disc from the name and email the proof for approval before anything is printed." },
         ],
         note: "An order with no artworkRef is the team-design route, never a gap: the proof follows by email and is approved before printing, like any other proof.",
@@ -1476,7 +1478,7 @@ async function toolGetOrderQuestions(_ctx: Ctx, _args: Record<string, unknown>):
       },
     ],
     alsoRequiredAtCreateOrder: {
-      recapRef: "Comes from get_recap over these same answers; run the recap before create_order.",
+      recapRef: "Comes from get_recap over these same answers; run the recap before create_order, passing the captured email as contactEmail and the submitted design's reference as artworkRef so the recap binds to this flow.",
       idempotencyKey: "Mint one per intended order (8 to 128 characters) and reuse it on retries.",
       artworkRef: "Optional but expected on the we-have-artwork route: the reference from submit_artwork. Absent on the team-design route (question 8), where the team designs from the organization name.",
       contactPhone: "Collected with the shipping block (question 3) and passed to create_order; it also defaults into shipTo.phone.",
@@ -1498,7 +1500,7 @@ async function toolGetOrderQuestions(_ctx: Ctx, _args: Record<string, unknown>):
     "The contact name rides create_order with these answers.",
     `${PRICE_RANGE_LINE} ${NO_FEES_LINE}`,
     "Shipping is free on every order, and every order is covered by our 30-day money-back guarantee.",
-    "Then run get_recap over the answers; keep the recap reference it returns, because placing the order at the final step (Email me my invoice and design proof) uses it.",
+    "Then run get_recap over the answers, passing the captured email as contactEmail and the artwork reference from submit_artwork as artworkRef (when a design was submitted) so the recap binds; keep the recap reference it returns, because placing the order at the final step (Email me my invoice and design proof) uses it.",
   ].join("\n");
   return { structured, text, images: mountingPhotoImages() };
 }
@@ -1677,7 +1679,7 @@ async function toolGetRecap(ctx: Ctx, args: Record<string, unknown>): Promise<To
       contactEmail: contactEmailBound ?? null,
       proofRecipientEmail: contactEmailBound ?? null,
       binding: unbound
-        ? "Unbound summary: no contact email has been captured, so this recap is not placeable until one is. Capture it with start_order_intent and re-run get_recap with the same email to bind the summary for placement."
+        ? "Unbound summary: this recap was not given the contact email, so it is not placeable. Re-run get_recap with contactEmail set to the email captured with start_order_intent to bind the summary for placement (and with artworkRef from submit_artwork, if a design was submitted, so the design rides the recap). If no email has been captured yet, capture it first with start_order_intent."
         : "This recap binds to the contact email collected in the flow (and the captured intent, when one exists).",
       ...(unbound ? { unbound: true, placeable: false } : {}),
       ...(contactNameIn ? { contactName: contactNameIn } : {}),
@@ -1720,20 +1722,23 @@ async function toolGetRecap(ctx: Ctx, args: Record<string, unknown>): Promise<To
     gates: [GATES.designApproval, GATES.payment],
   };
   const shipTo = inputs.shipTo as Record<string, string>;
+  // R2 (Robin run, 2026-11-14): the WELCOME10 window's end date is
+  // the quote date plus 7 days, never the quote date itself.
+  const discountWindowEnd = new Date(new Date(record.createdAt).getTime() + 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
   const text = [
     `Recap ${recapRef}: ${inputs.quantity} discs, ${inputs.size}, mounting ${inputs.mounting}, for ${orgDisplay}.`,
-    ...(unbound ? [`This is an unbound summary: it is not placeable until a contact email is captured.`] : []),
-    artwork ? `Artwork: your design on the disc is shown with this recap. File: https://tap.giving${artworkDisplayPath(artworkRef!)}` : "Artwork: none attached. That is the team-design route, not a gap: the team designs the disc from the organization name on this order and emails the proof for approval before anything is printed.",
+    ...(unbound ? [`This is an unbound summary: it is not placeable until it is given the contact email.`] : []),
+    artwork ? `Artwork: your design on the disc is shown with this recap. File: https://tap.giving${artworkDisplayPath(artworkRef!)}` : "Artwork: no artwork is attached to this recap. If a design was submitted with submit_artwork, re-run get_recap with its artworkRef and the design shows here; a recap cannot see a submission it was not given. With no design of your own, the team-design route applies, and it is a route, not a gap: the team designs the disc from the organization name on this order and emails the proof for approval before anything is printed.",
     givingUrlOut
       ? `Tap destination: ${givingUrlOut}. Your discs start pointed at this page.`
       : "Tap destination: your own Tap.Giving page (your free Redirect Dashboard) until you set one; you can set or change it anytime from the dashboard.",
     `Your discs open go.tap.giving/${orgNameBound ? slugifyOrg(orgNameBound) : "your-organization-slug"}. ${dashboardSignInLine(orgNameBound ? slugifyOrg(orgNameBound) : "your-organization-slug")} The password arrives before your discs arrive.`,
     contactEmailBound
       ? `Contact: ${contactNameIn ? `${contactNameIn}, ` : ""}${contactEmailOut}${contactPhoneIn ? `, phone ${contactPhoneIn}` : ""}. The final proof is emailed to this address for approval.`
-      : `Contact: none captured yet. Capture the contact email with start_order_intent so the recap can be placed: the invoice and the design proof are emailed to that address, and capturing it starts no order and sends nothing else.`,
+      : `Contact: no contact email was given to this recap. If one was already captured with start_order_intent, re-run get_recap with that same email as contactEmail so the recap can be placed: the invoice and the design proof are emailed to that address, and capturing it starts no order and sends nothing else.`,
     `Ship to: ${shipTo.name}, ${shipTo.street}, ${shipTo.city}, ${shipTo.state} ${shipTo.postalCode}, ${shipTo.country}. Phone: ${shipTo.phone}.`,
     `Cost: ${dollars(quote.grandTotalCents)} total. Shipping: Free. ${TAX_NOTE}`,
-    `First-order discount, when it applies: if this is ${orgDisplay}'s first order, code WELCOME10 takes 10 percent off discs on the invoice emailed at placement, making the total ${dollars(quote.discountedTotalCents)}. It applies to any first order placed within 7 days of this quote (${record.createdAt.slice(0, 10)}); if the 7 days pass, a fresh quote restarts the window.`,
+    `First-order discount, when it applies: if this is ${orgDisplay}'s first order, code WELCOME10 takes 10 percent off discs on the invoice emailed at placement, making the total ${dollars(quote.discountedTotalCents)}. It applies to any first order placed within 7 days of this quote (by ${discountWindowEnd}); if the 7 days pass, a fresh quote restarts the window.`,
     ...RECAP_NOTES,
     "How payment and proof fit together: placing the order at the final step emails the invoice and the design proof to the contact; production waits until the final proof is approved by email. Nothing is printed before that approval.",
     "Two ways forward, and both place the same order: pay now (place it now and pay the hosted invoice when it arrives), or lock in this price (place it now; today's quoted total is what the invoice carries).",
@@ -2474,10 +2479,14 @@ async function createOrderResult(ctx: Ctx, order: OrderRecord, replayed: boolean
         "through the same process that handles website invoice requests. Source is distinguishable as the MCP; nothing else differs.",
     nextStep,
   };
+  // R3 (Robin run, 2026-11-14): the headline total reads from the
+  // invoice this placement created, never a separately computed
+  // figure; the quote total stands only when no invoice exists yet
+  // (held or pending, which the lines below state plainly).
   const text = [
     `Order placed: ${order.orderRef}.`,
     confirmation,
-    `Total: ${dollars(order.quote.grandTotalCents)} for ${order.quantity} discs. Shipping: Free.`,
+    `Total: ${dollars(order.invoice ? order.invoice.totalCents : order.quote.grandTotalCents)} for ${order.quantity} discs. Shipping: Free.`,
     `Your discs open go.tap.giving/${order.orgSlug}. ${dashboardSignInLine(order.orgSlug)} The password arrives before your discs arrive.`,
     emailLine,
     order.invoice
@@ -2799,7 +2808,7 @@ export const TOOLS: ToolDef[] = [
     name: "get_recap",
     description:
       "The full recap, the last thing before the exits: it validates the same order inputs create_order will carry (quantity from 100 to 7000, one of the two built-in sizes, adhesive or screws mounting, a complete shipping address) and returns the submitted artwork (displayUrl plus image content where renderable), the quantity, the shipping address as entered, " +
-      "the exact cost from get_quote, and both required notes. Returns a recapRef; create_order carries it, and an order whose inputs differ from the recap is refused as a conflict. Without a contactEmail the same complete summary returns as an unbound summary, marked not placeable until a contact email is captured; create_order refuses an unbound recap. No key needed.",
+      "the exact cost from get_quote, and both required notes. Returns a recapRef; create_order carries it, and an order whose inputs differ from the recap is refused as a conflict. Pass contactEmail (the email captured with start_order_intent) and artworkRef (the reference submit_artwork returned, when a design was submitted) to bind the recap to the flow. Without a contactEmail the same complete summary returns as an unbound summary, marked not placeable; an unbound recap asserts nothing about what the flow captured elsewhere, and create_order refuses it. No key needed.",
     inputSchema: {
       type: "object",
       required: ["quantity", "size", "mounting", "shipTo"],
@@ -2815,9 +2824,9 @@ export const TOOLS: ToolDef[] = [
             state: { type: "string", description: "State or province." }, postalCode: { type: "string", description: "Postal or ZIP code." }, country: { type: "string", description: "Country." }, phone: { type: "string", description: "A phone number for the delivery address." },
           },
         },
-        artworkRef: { type: "string", description: "Optional: the artwork reference submit_artwork returned, shown on the disc in the recap." },
+        artworkRef: { type: "string", description: "Optional: the artwork reference submit_artwork returned; pass it so the submitted design shows on the disc in the recap. Without it, the recap cannot show a design the flow submitted." },
         linkDestination: { type: "string", description: "Optional: the page a tap opens. Any http or https URL, changeable anytime; the Redirect Dashboard is the default." },
-        contactEmail: { type: "string", description: "The order contact email; the final proof is emailed there, so it must be an address the organization owns." },
+        contactEmail: { type: "string", description: "The order contact email: pass the email captured with start_order_intent; it binds the recap for placement. The final proof is emailed there, so it must be an address the organization owns." },
         contactName: { type: "string", description: "Optional display only: the contact person's name, echoed in the recap." },
         contactPhone: { type: "string", description: "Optional display only: the contact phone, echoed in the recap." },
       },

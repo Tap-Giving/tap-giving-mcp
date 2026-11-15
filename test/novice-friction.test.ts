@@ -157,7 +157,8 @@ test("S2: a recap with no artwork reads as the team-design route", async () => {
     quantity: 100, size: "100mm-round", mounting: "adhesive", shipTo: SHIP_TO,
     linkDestination: "https://gracecommunity.example/give",
   }, noFetch);
-  assert.ok(r.text.includes("Artwork: none attached. That is the team-design route, not a gap"), "the no-artwork line is a route");
+  assert.ok(r.text.includes("Artwork: no artwork is attached to this recap"), "the no-artwork line speaks about this recap, not the user's state");
+  assert.ok(r.text.includes("the team-design route applies, and it is a route, not a gap"), "the team-design route is presented as a route");
   assert.ok(r.text.includes("emails the proof for approval before anything is printed"), "the proof follows by email");
 });
 
@@ -190,7 +191,7 @@ test("S4: get_recap without a contact email returns the unbound summary", async 
     quantity: 100, size: "100mm-round", mounting: "adhesive", shipTo: SHIP_TO,
     linkDestination: "https://gracecommunity.example/give",
   }, noFetch);
-  assert.ok(r.text.includes("This is an unbound summary: it is not placeable until a contact email is captured."), "the not-placeable marker is in the text");
+  assert.ok(r.text.includes("This is an unbound summary: it is not placeable until it is given the contact email."), "the not-placeable marker is in the text");
   assert.ok(r.text.includes("Cost: $500.00 total"), "the summary is complete, total included");
   assert.ok(r.text.includes("the invoice and the design proof are emailed to that address"), "the marker says what the email is for");
   assert.ok(r.text.includes("capturing it starts no order and sends nothing else"), "the marker says capturing starts nothing");
