@@ -13,15 +13,18 @@ import { EXAMPLES_INDEX } from "../src/examples-data.ts";
 import { PHOTOS_INDEX } from "../src/photos-data.ts";
 
 // llms.txt (business repo, website/llms.txt): "100-199 discs: $5.00 per
-// disc; 200-399: $4.00; 400+: $3.50; Minimum order: 100 discs".
+// disc; 200-399: $4.00; 400-799: $3.50; 800+: $3.00; Minimum order:
+// 100 discs" (four tiers, matching shared/business-rules.ts).
 test("tier boundaries equal the llms.txt figures", () => {
   assert.equal(tierForQuantity(100).unitCents, 500);
   assert.equal(tierForQuantity(199).unitCents, 500);
   assert.equal(tierForQuantity(200).unitCents, 400);
   assert.equal(tierForQuantity(399).unitCents, 400);
   assert.equal(tierForQuantity(400).unitCents, 350);
-  assert.equal(tierForQuantity(7000).unitCents, 350);
-  assert.deepEqual(PRICING_TIERS.map((t) => [t.minQuantity, t.unitCents]), [[400, 350], [200, 400], [100, 500]]);
+  assert.equal(tierForQuantity(799).unitCents, 350);
+  assert.equal(tierForQuantity(800).unitCents, 300);
+  assert.equal(tierForQuantity(7000).unitCents, 300);
+  assert.deepEqual(PRICING_TIERS.map((t) => [t.minQuantity, t.unitCents]), [[800, 300], [400, 350], [200, 400], [100, 500]]);
 });
 
 test("quote math matches the invoice door's quoteFor shape", () => {

@@ -375,7 +375,7 @@ export const DISCOUNT_WINDOW_MEANING =
 // initialize instructions. The tier breakdown, the minimum, and
 // the first-order discount live at the quote step and after it,
 // never on an opening surface.
-export const PRICE_RANGE_LINE = "Price range of $3.50 - $5.00 per disc depending on quantity.";
+export const PRICE_RANGE_LINE = "Price range of $3.00 - $5.00 per disc depending on quantity.";
 
 export const GATES = {
   designApproval:

@@ -82,19 +82,20 @@ Every tool declares `destructiveHint: false` and `openWorldHint: false`; the rea
 
 ## Pricing facts
 
-These facts belong to the quote step and after it. Part 1 surfaces (discovery, the GET self-description, the first presentation of the server, the artwork spec, product facts) carry NO pricing references at all (Ryan, 2026-11-09). The per-disc range is first stated at the Part 2 entry, the order questions: Price range of $3.50 - $5.00 per disc depending on quantity.
+These facts belong to the quote step and after it. Part 1 surfaces (discovery, the GET self-description, the first presentation of the server, the artwork spec, product facts) carry NO pricing references at all (Ryan, 2026-11-09). The per-disc range is first stated at the Part 2 entry, the order questions: Price range of $3.00 - $5.00 per disc depending on quantity.
 
 Quote from list pricing only. Headline totals are always list totals.
 
 - $5.00 each for 100 to 199 discs
 - $4.00 each for 200 to 399 discs
-- $3.50 each for 400 or more discs
+- $3.50 each for 400 to 799 discs
+- $3.00 each for 800 or more discs
 - Minimum order: 100 discs
 - Shipping: free on every order, shown as its own line
 - Every order is covered by a 30-day money-back guarantee
 - Tax, where it applies, is calculated on the invoice
 
-Worked totals: 100 discs cost $500.00. 250 discs cost $1,000.00. 400 discs cost $1,400.00.
+Worked totals: 100 discs cost $500.00. 250 discs cost $1,000.00. 400 discs cost $1,400.00. 800 discs cost $2,400.00.
 
 WELCOME10 is a conditional first-order line only: 10 percent off the first order, inside a 7-day renewing window, applied at invoice time when the order is the organization's first. Never present a discounted total as the price, and never bake it into a headline total. `get_quote` returns it separately as `discount.conditionalTotalCents` with `appliedInHeadlineTotals: false`.
 

@@ -12,7 +12,8 @@
 // requires identical totals.
 //
 // quoteFor() semantics mirrored exactly (read from pricing.ts):
-//   tiers descending: 400+ at 350, 200-399 at 400, 100-199 at 500 cents
+//   tiers descending: 800+ at 300, 400-799 at 350, 200-399 at 400,
+//     100-199 at 500 cents
 //   antiMetal: undefined means 0 for the plain call, but the invoice
 //     door (and this server, per spec 2.3) distinguishes "unknown"
 //     (the caller omitted the count): unknown bills 0 and is reported
@@ -22,7 +23,7 @@
 //     internal record figure, NOT the MCP's headline: Marketing's
 //     content check (2026-11-06) ruled the MCP quote must headline LIST
 //     totals (the llms.txt published worked totals: 100 = $500,
-//     200 = $800, 400 = $1,400) and carry the first-order discount only
+//     200 = $800, 400 = $1,400, 800 = $2,400) and carry the first-order discount only
 //     as a conditional WELCOME10 line. So this contract keeps both:
 //     grandTotalCents is the LIST total (unitCents * qty + addOnCents),
 //     and discountedTotalCents is the conditional figure the discount
@@ -33,7 +34,7 @@
 //     read-back); they are never asserted to an unverified caller.
 //   redirect: adds the free Redirect Dashboard add-on line at 0 cents.
 
-export const PRICE_CONTRACT_VERSION = "2026-11-06.2";
+export const PRICE_CONTRACT_VERSION = "2026-11-19.1";
 export const PRICE_SOURCE =
   "shared/business-rules.ts (PRICING_TIERS, ORDER_POLICY), computed by worker/tap-order/src/pricing.ts quoteFor";
 
@@ -51,7 +52,8 @@ export interface PricingTier {
 // Descending so the first matching tier is authoritative (same order
 // as PRICING_TIERS in shared/business-rules.ts).
 export const PRICING_TIERS: readonly PricingTier[] = [
-  { minQuantity: 400, unitCents: 350, label: "400+ discs" },
+  { minQuantity: 800, unitCents: 300, label: "800+ discs" },
+  { minQuantity: 400, unitCents: 350, label: "400-799 discs" },
   { minQuantity: 200, unitCents: 400, label: "200-399 discs" },
   { minQuantity: 100, unitCents: 500, label: "100-199 discs" },
 ];
