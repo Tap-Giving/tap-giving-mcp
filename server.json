@@ -1,6 +1,7 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.ryanshook/tap-giving-mcp",
+  "title": "NFC Tap Builder by Tap.Giving",
   "description": "Design and order custom NFC tap discs. A person pays the hosted invoice; the server moves no money.",
   "repository": {
     "url": "https://github.com/Tap-Giving/tap-giving-mcp",
@@ -8,6 +9,15 @@
   },
   "version": "1.0.0",
   "websiteUrl": "https://tap.giving",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/Tap-Giving/tap-giving-mcp/main/assets/icon-512.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    }
+  ],
   "remotes": [
     {
       "type": "streamable-http",

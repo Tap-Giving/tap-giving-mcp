@@ -19,11 +19,11 @@ export const SERVER_TITLE = "NFC Tap Builder by Tap.Giving";
 // finished file in, the on-disc preview shows it back, and the
 // emailed final proof belongs to the order stage.
 export const POSITIONING_LINE =
-  "A design tool first: this server helps you create print-ready NFC tap artwork proofs. " +
-  "Work from its published spec and design directions, compose the artwork with your own tools, " +
-  "and submit the finished file to see it on the disc as a proof. The artwork is yours: print-ready, " +
-  "vendor-neutral, yours to take to any printer. Ordering discs through Tap.Giving is an optional " +
-  "next step, only if you want it.";
+  "A design tool first: this server publishes the spec and design directions for print-ready " +
+  "NFC tap artwork proofs. Artwork is composed with the caller's own tools and submitted as a " +
+  "finished file, and the server renders the submitted file on the disc as a proof. The artwork " +
+  "belongs to the organization: print-ready, vendor-neutral, and portable to any printer. " +
+  "Ordering discs through Tap.Giving is an optional next step.";
 // The no-fees line (phase two only, Ryan 2026-11-09): stated once
 // here and first served at the order questions. Facts: no
 // subscription fees (llms.txt fact set), and the Redirect Dashboard

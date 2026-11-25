@@ -2658,6 +2658,7 @@ async function toolGetOrderStatus(ctx: Ctx, args: Record<string, unknown>): Prom
 
 export interface ToolDef {
   name: string;
+  title: string;
   description: string;
   inputSchema: Record<string, unknown>;
   annotations: Record<string, unknown>;
@@ -2670,21 +2671,29 @@ const WRITE = { readOnlyHint: false, destructiveHint: false, idempotentHint: fal
 export const TOOLS: ToolDef[] = [
   {
     name: "get_discovery",
+    title: "Get discovery",
     description:
-      "Start here, with the design tool. One call orients a cold agent: the builder's introduction (NFC Tap Builder by Tap.Giving), what the tool does (print-ready NFC tap artwork proofs from the published spec and design directions, yours to take to any printer), the product in plain words, " +
-      "the first choice (shape: round or square), the artwork spec summary, and the full capability list with the human gates. Ordering is the optional step after the design path. " +
-      "Discovery states the access model up front: no account, key, or login at any point; order status is read with the status reference returned at placement. " +
-      "The optional intent argument is echoed back as guidance; a disc count in it points at get_quote for the binding total at that count. " + GATES.payment,
+      "The orientation response for this server, the design tool NFC Tap Builder by Tap.Giving. It returns the builder's introduction, " +
+      "what the server does (print-ready NFC tap artwork proofs from the published spec and design directions; the artwork is the " +
+      "organization's own, to take to any printer), the product in plain words, the first choice (shape: round or square), the artwork " +
+      "spec summary, and the full capability list with the human gates. Ordering is the optional step after the design path. The response " +
+      "states the access model up front: no account, key, or login at any point; order status is read with the status reference returned " +
+      "at placement. The optional intent argument is echoed back as guidance; a disc count in it is matched with the binding total " +
+      "get_quote returns at that count. " + GATES.payment,
     inputSchema: { type: "object", properties: { intent: { type: "string", description: "Optional free-text description of what the person wants (for example an organization type and a rough disc count). It is echoed back as guidance; a disc count in it points at get_quote for the binding total at that count." } } },
     annotations: READ,
     run: toolGetDiscovery,
   },
   {
     name: "get_quote",
+    title: "Get a quote",
     description:
-      "The binding quote for a prospective order (also known as get_pricing): quantity, tier, list totals as the headline, and one payable first-order total with the first-order discount scope and its 7-day renewing window explained in plain words. " +
-      "add-ons, free shipping as its own line, the exact grand total, and the turnaround (2 to 3 weeks from artwork approval). No tax line: " + TAX_NOTE + " " +
-      "Quantities below the 100-disc minimum are refused by this tool itself. Call this when the person names a quantity and wants the exact price; for product facts without a quantity, call get_product instead. The next step after a quote is get_order_questions; the artwork path is get_artwork_spec and submit_artwork.",
+      "The binding quote for a prospective order (also known as get_pricing). For a given quantity it returns the tier, the list totals " +
+      "as the headline, and one payable first-order total with the first-order discount scope and its 7-day renewing window explained in " +
+      "plain words, add-ons, free shipping as its own line, the exact grand total, and the turnaround (2 to 3 weeks from artwork " +
+      "approval). No tax line: " + TAX_NOTE + " Quantities below the 100-disc minimum are refused by this tool itself. It is the tool for the exact price at a named quantity; " +
+      "get_product returns product facts without a quantity, get_order_questions returns the order questions that follow a quote, and the " +
+      "artwork path runs through get_artwork_spec and submit_artwork.",
     inputSchema: {
       type: "object",
       required: ["quantity"],
@@ -2698,9 +2707,16 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "get_product",
+    title: "Get product facts",
     description:
-      "The full product facts. Prices are stated in the order phase (get_order_questions, get_quote, get_recap), not here. Returns one block per topic: discs (the locked tap chip, 0.85 mm double-laminated matte waterproof PVC, the 100 mm (4 inch) round and square built-ins; every other size is a manual exception), mounting (options and the metal caveat), stands and badges (table stands and lanyard badges, from the team by email, not ordered through this server), shipping (2 to 3 weeks from artwork approval), samples (there is no sample program; the emailed proof stands in for it), and ordering (tax-exempt, payment, reorder, and design help), plus the Redirect Dashboard and the destination model: per-disc pointing, two destinations, dashboard sign-in timing, and phone compatibility with the printed-code fallback. " +
-      "Pass the optional topic argument to return only one block. Call this for product facts alone; for a first orientation call get_discovery, and for the price at a quantity call get_quote.",
+      "The full product facts. Prices are stated in the order phase (get_order_questions, get_quote, get_recap), not here. It returns one " +
+      "block per topic: discs (the locked tap chip, 0.85 mm double-laminated matte waterproof PVC, the 100 mm (4 inch) round and square " +
+      "built-ins; every other size is a manual exception), mounting (options and the metal caveat), stands and badges (table stands and " +
+      "lanyard badges, from the team by email, not ordered through this server), shipping (2 to 3 weeks from artwork approval), samples " +
+      "(there is no sample program; the emailed proof stands in for it), and ordering (tax-exempt, payment, reorder, and design help), " +
+      "plus the Redirect Dashboard and the destination model: per-disc pointing, two destinations, dashboard sign-in timing, and phone " +
+      "compatibility with the printed-code fallback. The optional topic argument returns only one block. It is the tool for product facts " +
+      "alone; get_discovery returns the first orientation, and get_quote returns the price at a quantity.",
     inputSchema: {
       type: "object",
       properties: { topic: { type: "string", enum: [...PRODUCT_TOPICS, "overview", "general"], description: "Optional: return only this one product block (discs, stands, badges, mounting, shipping, samples, or ordering), or overview (also general) for the full summary. Omit it to return every block." } },
@@ -2710,11 +2726,16 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "get_artwork_spec",
+    title: "Get artwork spec",
     description:
-      "The production artwork spec for the chosen shape: 106 mm artboard, cut, bleed, and safe-zone geometry as structured millimetre data plus plain guidelines, " +
-      "the format wanted back (vector, SVG preferred), delivered example designs to react to (real organizations' finished discs, indexed in full with a bounded set shown inline), labeled explainer photos of discs in place, and the optional logo ask. The agent builds the artwork with its own tools; " +
-      "this server has no design-generation tool. The artwork composed from this spec is the organization's own, vendor-neutral and print-ready to take to any printer. No key needed. Choose the shape first (the discovery call names it the first choice), then call this for that shape; call get_discovery instead when the person has not chosen yet, and submit_artwork once the artwork file exists. " +
-      "The shape argument selects round or square geometry; chosenExampleRef carries the delivered example the person picked, from the examples this tool returns.",
+      "The production artwork spec for the chosen shape: 106 mm artboard, cut, bleed, and safe-zone geometry as structured millimetre " +
+      "data plus plain guidelines, the format wanted back (vector, SVG preferred), delivered example designs to react to (real " +
+      "organizations' finished discs, indexed in full with a bounded set shown inline), labeled explainer photos of discs in place, and " +
+      "the optional logo ask. Artwork is built with the caller's own tools; this server has no design-generation tool. The artwork " +
+      "composed from this spec is the organization's own, vendor-neutral and print-ready to take to any printer. No key is needed. Shape " +
+      "is the first choice (the discovery response names it as such, and get_discovery returns the orientation when no shape has been " +
+      "chosen yet); the shape argument selects round or square geometry, and submit_artwork is the tool that accepts the finished artwork " +
+      "file. chosenExampleRef carries the delivered example the person picked, from the examples this tool returns.",
     inputSchema: {
       type: "object",
       properties: {
@@ -2727,11 +2748,14 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "get_examples",
+    title: "Get examples",
     description:
-      "Show the finished discs: the real designs Tap.Giving produced and delivered to organizations, as labeled images, paged nine at a time, round first then square. " +
-      "Each example is labeled with its shape and pick number (the same numbers get_artwork_spec prints and accepts as chosenExampleRef), its description, and the organization it was delivered to. " +
-      "Filter by shape, or page the full set with offset; the structured content names the totals by shape and the next page's offset when more remain. " +
-      "Call this whenever the person asks to see examples or finished work, at any point in the journey; then pick a direction and call get_artwork_spec to design theirs. No key needed.",
+      "The finished discs: the real designs Tap.Giving produced and delivered to organizations, returned as labeled images, paged nine at " +
+      "a time, round first then square. Each example is labeled with its shape and pick number (the same numbers get_artwork_spec prints " +
+      "and accepts as chosenExampleRef), its description, and the organization it was delivered to. The shape argument filters by shape, " +
+      "and offset pages the full set; the structured content names the totals by shape and the next page's offset when more remain. It is " +
+      "the tool that returns examples or finished work at any point in the journey; get_artwork_spec returns the spec for designing from " +
+      "a picked direction. No key is needed.",
     inputSchema: {
       type: "object",
       properties: {
@@ -2745,11 +2769,22 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "submit_artwork",
+    title: "Submit artwork",
     description:
-      "Send the finished artwork back and see it on the disc as a proof. The artwork stays the organization's own: print-ready and vendor-neutral, theirs to take to any printer; submitting it obliges no order. Intake is permissive by ruling: a real image is accepted in any format and rejected only on three sanity grounds " +
-      "(malicious or masquerading content, over 5 MB decoded, or not decodable as the type it claims). Production fitness is judged later in the normal proof flow, never here. " +
-      "No email is needed on the cold path. The optional designUrl argument records the destination the design was built for (mid-to-late design phase); the optional chosenExampleRef names the delivered example the design follows, and its reproduction data rides the answer beside the verify-against-example checklist. The file argument carries the artwork file (filename, mediaType, contentBase64); sha256 is the hex SHA-256 of those file bytes; shape optionally names the shape the artwork was designed for; orderRef optionally attaches the submission to an existing order; logo optionally carries the source logo the artwork was built from; note is free text for the team. Each call creates a separate submission: resubmitting the same file mints a new artworkRef rather than replacing the earlier one. Returns the artworkRef every later step carries, a displayUrl, and a preview of the person's own design composited on the disc (cut shape applied) for the renderable formats (SVG, PNG, JPEG, WebP, GIF); for a format this server cannot render here (for example PDF), the answer says so plainly and never promises a preview or an email at this stage. " +
-      GATES.designApproval,
+      "The finished-artwork intake: it accepts a completed artwork file and returns the design composited on the disc as a proof. The " +
+      "artwork stays the organization's own: print-ready and vendor-neutral, theirs to take to any printer; submitting it obliges no " +
+      "order. Intake is permissive by ruling: a real image is accepted in any format and rejected only on three sanity grounds (malicious " +
+      "or masquerading content, over 5 MB decoded, or not decodable as the type it claims). Production fitness is judged later in the " +
+      "normal proof flow, never here. No email is needed on the cold path. The optional designUrl argument records the destination the " +
+      "design was built for (mid-to-late design phase); the optional chosenExampleRef names the delivered example the design follows, and " +
+      "its reproduction data rides the answer beside the verify-against-example checklist. The file argument carries the artwork file " +
+      "(filename, mediaType, contentBase64); sha256 is the hex SHA-256 of those file bytes; shape optionally names the shape the artwork " +
+      "was designed for; orderRef optionally attaches the submission to an existing order; logo optionally carries the source logo the " +
+      "artwork was built from; note is free text for the team. Each call creates a separate submission: resubmitting the same file mints " +
+      "a new artworkRef rather than replacing the earlier one. It returns the artworkRef every later step carries, a displayUrl, and a " +
+      "preview of the person's own design composited on the disc (cut shape applied) for the renderable formats (SVG, PNG, JPEG, WebP, " +
+      "GIF); for a format this server cannot render here (for example PDF), the answer says so plainly and never promises a preview or an " +
+      "email at this stage. " + GATES.designApproval,
     inputSchema: {
       type: "object",
       required: ["file", "sha256"],
@@ -2776,11 +2811,15 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "start_order_intent",
+    title: "Start order intent",
     description:
-      "An optional step on the order path, not the start of the journey: capture a contact email through the same public capture endpoint the website's email-first door uses, " +
-      "so follow-up rides the existing lead machinery. No key needed. An intent is a lead, not an order: it creates no invoice and reserves nothing. " +
-      "Returns an intentRef, links an artworkRef when given, and says plainly what follow-up to expect. The email must be a real, reachable address: reserved domain endings (.example, .test, .invalid) and the example domains are refused, because no follow-up could ever reach them. " +
-      "Placing an order needs no key. One intent per email: a repeat call with the same email returns the existing intentRef and creates no second lead. This call captures the contact only; create_order is the later call that sets up the order itself, and it needs no key either.",
+      "An optional step on the order path, not the start of the journey: it captures a contact email through the same public capture " +
+      "endpoint the website's email-first door uses, so follow-up rides the existing lead machinery. No key is needed. An intent is a " +
+      "lead, not an order: it creates no invoice and reserves nothing. It returns an intentRef, links an artworkRef when given, and says " +
+      "plainly what follow-up to expect. The email must be a real, reachable address: reserved domain endings (.example, .test, .invalid) " +
+      "and the example domains are refused, because no follow-up could ever reach them. Placing an order needs no key. One intent per " +
+      "email: a repeat call with the same email returns the existing intentRef and creates no second lead. This tool captures the contact " +
+      "only; create_order is the later tool that sets up the order itself, and it needs no key either.",
     inputSchema: {
       type: "object",
       required: ["email"],
@@ -2797,18 +2836,30 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "get_order_questions",
+    title: "Get order questions",
     description:
-      "The order questions as structured data, returned in the exact order to ask them: the contact email first (captured through start_order_intent), then the organization name, the shipping address and phone, quantity, shape, the metal count, mounting with the picture assets, the artwork answer (we have artwork, or the team designs it from the organization name), and the link destination as a confirmation of the destination carried from the design. The contact name and phone ride create_order. " +
-      "Prices are first stated here, in the order phase: the price range and the no-fees line ride this answer. Call this when the person is ready to order; for a first orientation, call get_discovery.",
+      "The order questions as structured data, returned in the exact order they are asked: the contact email first (captured through " +
+      "start_order_intent), then the organization name, the shipping address and phone, quantity, shape, the metal count, mounting with " +
+      "the picture assets, the artwork answer (artwork already in hand, or the team designs it from the organization name), and the link " +
+      "destination as a confirmation of the destination carried from the design. The contact name and phone ride create_order. Prices are " +
+      "first stated here, in the order phase: the price range and the no-fees line ride this answer. It is the tool for the point where a " +
+      "person is ready to order; get_discovery returns the first orientation.",
     inputSchema: { type: "object", properties: {} },
     annotations: READ,
     run: toolGetOrderQuestions,
   },
   {
     name: "get_recap",
+    title: "Get recap",
     description:
-      "The full recap, the last thing before the exits: it validates the same order inputs create_order will carry (quantity from 100 to 7000, one of the two built-in sizes, adhesive or screws mounting, a complete shipping address) and returns the submitted artwork (displayUrl plus image content where renderable), the quantity, the shipping address as entered, " +
-      "the exact cost from get_quote, and both required notes. Returns a recapRef; create_order carries it, and an order whose inputs differ from the recap is refused as a conflict. Pass contactEmail (the email captured with start_order_intent) and artworkRef (the reference submit_artwork returned, when a design was submitted) to bind the recap to the flow. Without a contactEmail the same complete summary returns as an unbound summary, marked not placeable; an unbound recap asserts nothing about what the flow captured elsewhere, and create_order refuses it. No key needed.",
+      "The full recap, the last thing before the exits: it validates the same order inputs create_order will carry (quantity from 100 to " +
+      "7000, one of the two built-in sizes, adhesive or screws mounting, a complete shipping address) and returns the submitted artwork " +
+      "(displayUrl plus image content where renderable), the quantity, the shipping address as entered, the exact cost from get_quote, " +
+      "and both required notes. It returns a recapRef; create_order carries it, and an order whose inputs differ from the recap is " +
+      "refused as a conflict. The contactEmail argument (the email captured with start_order_intent) and the artworkRef argument (the " +
+      "reference submit_artwork returned, when a design was submitted) bind the recap to the flow. Without a contactEmail the same " +
+      "complete summary returns as an unbound summary, marked not placeable; an unbound recap asserts nothing about what the flow " +
+      "captured elsewhere, and create_order refuses it. No key is needed.",
     inputSchema: {
       type: "object",
       required: ["quantity", "size", "mounting", "shipTo"],
@@ -2836,12 +2887,19 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "create_order",
+    title: "Create an order",
     description:
-      "The final step of the order path, labeled \"Email me my invoice and design proof.\" Set up an order through the same front door a website order takes (an INVREQ record the hourly adoption resolves into the CRM, indistinguishable downstream). " +
-      "This is the lock-in write behind both recap exits; it carries the recapRef and a required idempotencyKey (a retry with the same key and payload returns the original orderRef; the same key with a different payload is a conflict naming the differing fields). " +
-      "The 100-disc minimum is enforced here. Sizes other than the two built-ins return manual_exception. Returns the orderRef (the reference every later call uses), the exact quote, the chosen exit, and the next step. " +
-      "Failure modes: a recap whose inputs differ from the order is refused as a conflict naming the differing fields; a reused idempotencyKey with a different payload is a conflict naming the original order. " +
-      "Routing: start_order_intent is the earlier contact capture, and get_recap must run immediately before this call over the same inputs. Placing the order records it, emails the full order to the Tap.Giving team, creates the invoice at the quoted total, and emails the invoice and the design proof to the contact; the response carries each step's outcome, the settled confirmation text, and the order's status reference. " + STATUS_RECOVERY_LINE + " A replay with the same idempotencyKey re-attempts only the steps that did not complete. " + GATES.designApproval + " " + GATES.payment,
+      "The final step of the order path, labeled \"Email me my invoice and design proof.\" It sets up an order through the same front door " +
+      "a website order takes (an INVREQ record the hourly adoption resolves into the CRM, indistinguishable downstream). This is the " +
+      "lock-in write behind both recap exits; it carries the recapRef and a required idempotencyKey (a retry with the same key and " +
+      "payload returns the original orderRef; the same key with a different payload is a conflict naming the differing fields). The " +
+      "100-disc minimum is enforced here. Sizes other than the two built-ins return manual_exception. It returns the orderRef (the " +
+      "reference every later call uses), the exact quote, the chosen exit, and the next step. Failure modes: a recap whose inputs differ " +
+      "from the order is refused as a conflict naming the differing fields; a reused idempotencyKey with a different payload is a " +
+      "conflict naming the original order. The order's inputs are the same inputs get_recap validated for its recap (start_order_intent " +
+      "is the earlier contact capture); the recapRef binds the order to that recap. Placing the order records it, emails the full order " +
+      "to the Tap.Giving team, creates the invoice at the quoted total, and emails the invoice and the design proof to the contact; the " +
+      "response carries each step's outcome, the settled confirmation text, and the order's status reference. " + STATUS_RECOVERY_LINE + " A replay with the same idempotencyKey re-attempts only the steps that did not complete. " + GATES.designApproval + " " + GATES.payment,
     inputSchema: {
       type: "object",
       required: ["contactName", "contactEmail", "contactPhone", "quantity", "size", "mounting", "shipTo", "recapRef", "idempotencyKey"],
@@ -2874,9 +2932,15 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "get_order_status",
+    title: "Get order status",
     description:
-      "Where an order stands, read with the order's status reference: the capability create_order returned once at placement (also carried in the customer email). No account or login exists; the reference itself is the credential, and an unknown reference answers not_found. Returns the tightened exposure set: the stage, the fulfillment state with tracking when present, the invoice state with its hosted link, the quantity, shape, and mounting, the order's own artwork preview, and the Redirect Dashboard block. It never returns the full business record, a shipping phone, or internal record ids. " +
-      "An order not yet adopted returns stage \"received\" with the adoption expectation, not an error. Call this to check an existing order; it never changes anything. Use get_recap before an order exists and get_order_questions to gather an order's inputs.",
+      "Where an order stands, read with the order's status reference: the capability create_order returned once at placement (also " +
+      "carried in the customer email). No account or login exists; the reference itself is the credential, and an unknown reference " +
+      "answers not_found. It returns the tightened exposure set: the stage, the fulfillment state with tracking when present, the invoice " +
+      "state with its hosted link, the quantity, shape, and mounting, the order's own artwork preview, and the Redirect Dashboard block. " +
+      "It never returns the full business record, a shipping phone, or internal record ids. An order not yet adopted returns stage " +
+      "\"received\" with the adoption expectation, not an error. It is the read for an existing order and never changes anything; get_recap " +
+      "covers the period before an order exists, and get_order_questions returns an order's inputs.",
     inputSchema: {
       type: "object",
       required: ["statusRef"],

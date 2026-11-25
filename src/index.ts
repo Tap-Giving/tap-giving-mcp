@@ -226,6 +226,7 @@ async function handleRpc(env: Env, request: Request): Promise<Response> {
       result: {
         tools: TOOLS.map((t) => ({
           name: t.name,
+          title: t.title,
           description: t.description,
           inputSchema: t.inputSchema,
           annotations: t.annotations,
