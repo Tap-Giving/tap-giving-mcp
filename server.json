@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.ryanshook/tap-giving-mcp",
+  "name": "io.github.RyanShook/tap-giving-mcp",
   "title": "NFC Tap Builder by Tap.Giving",
   "description": "Design and order custom NFC tap discs. A person pays the hosted invoice; the server moves no money.",
   "repository": {
